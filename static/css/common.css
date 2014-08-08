@@ -1,0 +1,24 @@
+#logo {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    background: url(../../static/img/icon/icon.png) no-repeat;
+    background-size: 100% 100%;
+}
+
+#title {
+    display: inline-block;
+    padding-left:10px;
+    font-size: 25px;
+}
+
+.snapshot {
+    max-width:250px;
+    max-height: 300px;
+    display: inline-block;
+}
+
+.snapshot img {
+    height: 100%;
+    width: 100%;
+}
