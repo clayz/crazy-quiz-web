@@ -9,7 +9,7 @@ app.register_blueprint(user_api)
 
 @app.route('/')
 def index():
-    app.logger.debug(app.config['USERNAME'])
+    # app.logger.debug(app.config['USERNAME'])
     return render_template('index.html')
 
 
