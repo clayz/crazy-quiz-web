@@ -1,10 +1,10 @@
 from flask import Flask
 from flask import render_template
-from api.user import user_api
+from api.account_api import account_api
 
 app = Flask(__name__)
 app.config.from_pyfile('settings.cfg')
-app.register_blueprint(user_api)
+app.register_blueprint(account_api)
 
 
 @app.route('/')
