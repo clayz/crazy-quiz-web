@@ -4,20 +4,16 @@ from constants import *
 
 
 class User(ndb.Model):
-    status = msgprop.EnumProperty(UserStatus, required=True, default=UserStatus.ACTIVE)
+    uuid = ndb.StringProperty(required=True)
     name = ndb.StringProperty(required=True)
     mail = ndb.StringProperty()
     gender = msgprop.EnumProperty(Gender, required=True, default=Gender.UNKNOWN)
     birthday = ndb.DateProperty()
     avatar = ndb.BlobProperty(compressed=True)
+    status = msgprop.EnumProperty(UserStatus, required=True, default=UserStatus.ACTIVE)
+    device = msgprop.EnumProperty(Device, required=True, default=Device.UNKNOWN)
     create_date = ndb.DateTimeProperty(required=True, auto_now=True)
     update_date = ndb.DateTimeProperty()
-
-
-class Device(ndb.Model):
-    uuid = ndb.StringProperty(required=True)
-    type = msgprop.EnumProperty(Device, required=True, default=Device.UNKNOWN)
-    create_date = ndb.DateTimeProperty(required=True, auto_now=True)
 
 
 class Account(ndb.Model):
