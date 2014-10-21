@@ -1,15 +1,14 @@
 from flask import Flask
 from flask import render_template
-from api.account_api import account_api
+from api.user_api import user_api
 
 app = Flask(__name__)
 app.config.from_pyfile('settings.cfg')
-app.register_blueprint(account_api)
+app.register_blueprint(user_api)
 
 
 @app.route('/')
 def index():
-    # app.logger.debug(app.config['USERNAME'])
     return render_template('index.html')
 
 
