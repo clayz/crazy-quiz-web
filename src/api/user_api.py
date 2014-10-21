@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from entities import User
+from entities import User, UserStatus
 
 user_api = Blueprint('user', __name__, url_prefix='/api/user')
 
@@ -31,6 +31,15 @@ def register():
     uuid = request.form['uuid']
     device = int(request.form['device'])
     app.logger.debug("User register, device: %d, UUID: %s" % (device, uuid))
+
+    user = User.get_by_id(uuid)
+    if user and user.status is UserStatus.ACTIVE:
+        app.logger.warn()
+
+    app.logger.debug(user)
+
+    # user = User(id=uuid, name='Clay Zhong')
+    # user.put()
 
     # exist_user = User.get(uuid)
     # app.logger.debug(exist_user)

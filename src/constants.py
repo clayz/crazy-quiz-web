@@ -4,7 +4,9 @@ from protorpc import messages
 class UserStatus(messages.Enum):
     ACTIVE = 1
     INACTIVE = 2
-    WITHDRAWAL = 3
+    UNINSTALL = 3
+    REINSTALL = 4
+    WITHDRAWAL = 9
 
 
 class Gender(messages.Enum):
