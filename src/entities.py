@@ -1,3 +1,4 @@
+from datetime import datetime, date, time
 from google.appengine.ext import ndb
 from google.appengine.ext.ndb import msgprop
 from constants import Gender, UserStatus, Device, AccountType
@@ -56,8 +57,14 @@ class Consume(BaseEntity):
 
 class LoginHistory(BaseEntity):
     version = ndb.StringProperty(required=True)
-    ip = ndb.StringProperty()
-    continue_login_days = ndb.IntegerProperty(required=True, default=1)
+    ip = ndb.StringProperty(required=True, repeated=True)
+    startup_time = ndb.TimeProperty(required=True, repeated=True)
+
+    @classmethod
+    def get_today(cls, ancestor_key):
+        return cls.query(ndb.AND(cls.create_date >= datetime.combine(date.today(), time()),
+                                 cls.create_date < datetime.combine(date.today() + datetime.timedelta(days=1), time())),
+                         ancestor=ancestor_key).fetch()
 
 
 class Account(BaseEntity):
