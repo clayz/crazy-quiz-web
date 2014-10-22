@@ -26,3 +26,21 @@ class Device(messages.Enum):
     IPHONE = 1
     IPAD = 2
     ANDROID = 3
+
+
+class APIStatus(messages.Enum):
+    SUCCESS = 100000
+    ERROR = 999999
+
+    # authorization and authentication
+    ACCESS_DENY = 100001
+    PERMISSION_DENY = 100002
+    TOKEN_INVALID = 100003
+
+    # API related
+    API_NOT_FOUND = 101001
+    PARAMETER_ERROR = 101002
+
+    # data related
+    DATA_NOT_FOUND = 102001
+    DATA_SAVE_FAILED = 102002
