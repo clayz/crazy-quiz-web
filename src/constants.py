@@ -1,5 +1,8 @@
 from protorpc import messages
 
+DEFAULT_GEM = 5
+DEFAULT_COIN = 100
+
 
 class UserStatus(messages.Enum):
     ACTIVE = 1
