@@ -12,14 +12,16 @@ class Purchase(BaseEntity):
 
 class Exchange(BaseEntity):
     goods_id = ndb.IntegerProperty(required=True)
-    coin = ndb.IntegerProperty(required=True)
     gem = ndb.IntegerProperty(required=True)
+    coin = ndb.IntegerProperty(required=True)
+    version = ndb.StringProperty(required=True)
 
 
 class Earn(BaseEntity):
     type = ndb.IntegerProperty(required=True)
     coin = ndb.IntegerProperty()
     gem = ndb.IntegerProperty()
+    version = ndb.StringProperty(required=True)
 
 
 class Consume(BaseEntity):
@@ -29,3 +31,4 @@ class Consume(BaseEntity):
     album = ndb.IntegerProperty()
     level = ndb.IntegerProperty()
     picture = ndb.IntegerProperty()
+    version = ndb.StringProperty(required=True)

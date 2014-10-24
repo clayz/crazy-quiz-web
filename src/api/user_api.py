@@ -4,8 +4,7 @@ from wtforms import Form, StringField, IntegerField, validators
 from entities.user import User, StartupHistory
 from entities.currency import Currency
 from constants import Device, DEFAULT_GEM, DEFAULT_COIN
-from utilities import json_response
-from errors import ParameterError
+from utilities import json_response, get_form
 
 user_api = Blueprint('user', __name__, url_prefix='/api/user')
 
@@ -21,10 +20,7 @@ class StartupForm(Form):
 def startup():
     from main import app
 
-    form = StartupForm(request.form)
-    if not form.validate():
-        raise ParameterError(form.errors.items())
-
+    form = get_form(StartupForm(request.form))
     uuid, name, version, device = form.uuid.data, form.name.data or None, form.version.data, form.device.data
     app.logger.info("User startup, name: %s, device: %d, UUID: %s" % (name, device, uuid))
 
