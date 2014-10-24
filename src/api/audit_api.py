@@ -1,19 +1,10 @@
 from flask import Blueprint, request
-from wtforms import Form, StringField, IntegerField, validators
-from entities.user import User
-from entities.audit import Purchase, Exchange
 from utilities import json_response, get_form
+from entities.user import User
+from entities.audit import Purchase, Exchange, Earn, Consume
+from api.forms import PurchaseForm, ExchangeForm, EarnForm, ConsumeForm
 
 audit_api = Blueprint('audit', __name__, url_prefix='/api/audit')
-
-
-class PurchaseForm(Form):
-    uuid = StringField('uuid', [validators.InputRequired(), validators.Length(max=500)])
-    goods_id = IntegerField('goods_id', [validators.InputRequired()])
-    product_id = StringField('product_id', [validators.InputRequired(), validators.Length(max=100)])
-    gem = IntegerField('gem', [validators.InputRequired()])
-    cost = IntegerField('cost', [validators.InputRequired()])
-    version = StringField('version', [validators.Length(min=3, max=5)])
 
 
 @audit_api.route('/purchase/', methods=['POST'])
@@ -25,28 +16,36 @@ def purchase():
     user = User.get(uuid)
 
     app.logger.info('[%s] Purchased goods_id: %d, product_id: %s' % (uuid, goods_id, product_id))
-    Purchase(parent=user.key, goods_id=goods_id, product_id=product_id, gem=form.gem.data, cost=form.cost.data, version=form.version.data).put()
+    Purchase(parent=user.key, goods_id=goods_id, product_id=product_id, gem=form.gem.data, cost=form.cost.data, version=form.version.data,
+             date=form.date.data).put()
 
     return json_response()
 
 
-class ExchangeForm(Form):
-    uuid = StringField('uuid', [validators.InputRequired(), validators.Length(max=500)])
-    goods_id = IntegerField('goods_id', [validators.InputRequired()])
-    gem = IntegerField('gem', [validators.InputRequired()])
-    coin = IntegerField('coin', [validators.InputRequired()])
-    version = StringField('version', [validators.Length(min=3, max=5)])
-
-
 @audit_api.route('/exchange/', methods=['POST'])
 def exchange():
-    from main import app
-
     form = get_form(ExchangeForm(request.form))
-    uuid, goods_id = form.uuid.data, form.goods_id.data
-    user = User.get(uuid)
+    user = User.get(form.uuid.data)
+    Exchange(parent=user.key, goods_id=form.goods_id.data, gem=form.gem.data, coin=form.coin.data, version=form.version.data,
+             date=form.date.data).put()
 
-    app.logger.debug('[%s] Exchange goods_id: %d' % goods_id)
-    Exchange(parent=user.key, goods_id=goods_id, gem=form.gem.data, coin=form.coin.data, version=form.version.data).put()
+    return json_response()
+
+
+@audit_api.route('/earn/', methods=['POST'])
+def earn():
+    form = get_form(EarnForm(request.form))
+    user = User.get(form.uuid.data)
+    Earn(parent=user.key, type_id=form.type_id.data, gem=form.gem.data, coin=form.coin.data, version=form.version.data, date=form.date.data).put()
+
+    return json_response()
+
+
+@audit_api.route('/consume/', methods=['POST'])
+def consume():
+    form = get_form(ConsumeForm(request.form))
+    user = User.get(form.uuid.data)
+    Consume(parent=user.key, type_id=form.type_id.data, gem=form.gem.data, coin=form.coin.data, album=form.album.data, level=form.level.data,
+            picture=form.picture.data, version=form.version.data, date=form.date.data).put()
 
     return json_response()
