@@ -52,36 +52,36 @@ def consume():
 
 
 class PurchaseForm(BaseForm):
-    goods_id = IntegerField('goods_id', [validators.input_required])
-    product_id = StringField('product_id', [validators.input_required, validators.length(max=100)])
-    gem = IntegerField('gem', [validators.input_required])
-    cost = IntegerField('cost', [validators.input_required])
+    goods_id = IntegerField('goods_id', [validators.input_required()])
+    product_id = StringField('product_id', [validators.input_required(), validators.length(max=100)])
+    gem = IntegerField('gem', [validators.input_required()])
+    cost = IntegerField('cost', [validators.input_required()])
     version = StringField('version', [validators.length(min=3, max=5)])
-    date = DateTimeField('date', [validators.input_required])
+    date = DateTimeField('date', [validators.input_required()])
 
 
 class ExchangeForm(BaseForm):
-    goods_id = IntegerField('goods_id', [validators.input_required])
-    gem = IntegerField('gem', [validators.input_required])
-    coin = IntegerField('coin', [validators.input_required])
+    goods_id = IntegerField('goods_id', [validators.input_required()])
+    gem = IntegerField('gem', [validators.input_required()])
+    coin = IntegerField('coin', [validators.input_required()])
     version = StringField('version', [validators.length(min=3, max=5)])
-    date = DateTimeField('date', [validators.input_required])
+    date = DateTimeField('date', [validators.input_required()])
 
 
 class EarnForm(BaseForm):
-    type_id = IntegerField('type_id', [validators.input_required])
-    gem = IntegerField('gem', [validators.optional])
-    coin = IntegerField('coin', [validators.optional])
+    type_id = IntegerField('type_id', [validators.input_required()])
+    gem = IntegerField('gem', [validators.optional()])
+    coin = IntegerField('coin', [validators.optional()])
     version = StringField('version', [validators.length(min=3, max=5)])
-    date = DateTimeField('date', [validators.input_required])
+    date = DateTimeField('date', [validators.input_required()])
 
 
 class ConsumeForm(BaseForm):
-    type_id = IntegerField('type_id', [validators.input_required])
-    gem = IntegerField('gem', [validators.optional])
-    coin = IntegerField('coin', [validators.optional])
-    album = IntegerField('album', [validators.optional])
-    level = IntegerField('level', [validators.optional])
-    picture = IntegerField('picture', [validators.optional])
+    type_id = IntegerField('type_id', [validators.input_required()])
+    gem = IntegerField('gem', [validators.optional()])
+    coin = IntegerField('coin', [validators.optional()])
+    album = IntegerField('album', [validators.optional()])
+    level = IntegerField('level', [validators.optional()])
+    picture = IntegerField('picture', [validators.optional()])
     version = StringField('version', [validators.length(min=3, max=5)])
-    date = DateTimeField('date', [validators.input_required])
+    date = DateTimeField('date', [validators.input_required()])

@@ -39,6 +39,6 @@ def create_user(uuid, name, device):
 
 
 class StartupForm(BaseForm):
-    name = StringField('name', [validators.Optional(), validators.Length(min=1, max=8)])
-    version = StringField('version', [validators.Length(min=3, max=5)])
-    device = IntegerField('device', [validators.NumberRange(min=0, max=3)])
+    name = StringField('name', [validators.optional(), validators.length(min=1, max=8)])
+    version = StringField('version', [validators.length(min=3, max=5)])
+    device = IntegerField('device', [validators.number_range(min=0, max=3)])
