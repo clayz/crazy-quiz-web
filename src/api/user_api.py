@@ -1,10 +1,10 @@
 from flask import Blueprint, request
 from google.appengine.ext import ndb
+from constants import Device, DEFAULT_GEM, DEFAULT_COIN
 from utilities import json_response, get_form
 from entities.user import User, StartupHistory
 from entities.currency import Currency
-from constants import Device, DEFAULT_GEM, DEFAULT_COIN
-from api.forms import StartupForm
+from api import *
 
 user_api = Blueprint('user', __name__, url_prefix='/api/user')
 
@@ -36,3 +36,9 @@ def create_user(uuid, name, device):
     currency.put()
 
     return user
+
+
+class StartupForm(BaseForm):
+    name = StringField('name', [validators.Optional(), validators.Length(min=1, max=8)])
+    version = StringField('version', [validators.Length(min=3, max=5)])
+    device = IntegerField('device', [validators.NumberRange(min=0, max=3)])

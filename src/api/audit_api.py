@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from utilities import json_response, get_form
 from entities.user import User
 from entities.audit import Purchase, Exchange, Earn, Consume
-from api.forms import PurchaseForm, ExchangeForm, EarnForm, ConsumeForm
+from api import *
 
 audit_api = Blueprint('audit', __name__, url_prefix='/api/audit')
 
@@ -49,3 +49,39 @@ def consume():
             picture=form.picture.data, version=form.version.data, date=form.date.data).put()
 
     return json_response()
+
+
+class PurchaseForm(BaseForm):
+    goods_id = IntegerField('goods_id', [validators.input_required])
+    product_id = StringField('product_id', [validators.input_required, validators.length(max=100)])
+    gem = IntegerField('gem', [validators.input_required])
+    cost = IntegerField('cost', [validators.input_required])
+    version = StringField('version', [validators.length(min=3, max=5)])
+    date = DateTimeField('date', [validators.input_required])
+
+
+class ExchangeForm(BaseForm):
+    goods_id = IntegerField('goods_id', [validators.input_required])
+    gem = IntegerField('gem', [validators.input_required])
+    coin = IntegerField('coin', [validators.input_required])
+    version = StringField('version', [validators.length(min=3, max=5)])
+    date = DateTimeField('date', [validators.input_required])
+
+
+class EarnForm(BaseForm):
+    type_id = IntegerField('type_id', [validators.input_required])
+    gem = IntegerField('gem', [validators.optional])
+    coin = IntegerField('coin', [validators.optional])
+    version = StringField('version', [validators.length(min=3, max=5)])
+    date = DateTimeField('date', [validators.input_required])
+
+
+class ConsumeForm(BaseForm):
+    type_id = IntegerField('type_id', [validators.input_required])
+    gem = IntegerField('gem', [validators.optional])
+    coin = IntegerField('coin', [validators.optional])
+    album = IntegerField('album', [validators.optional])
+    level = IntegerField('level', [validators.optional])
+    picture = IntegerField('picture', [validators.optional])
+    version = StringField('version', [validators.length(min=3, max=5)])
+    date = DateTimeField('date', [validators.input_required])
