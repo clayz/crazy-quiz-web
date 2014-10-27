@@ -1,10 +1,10 @@
 from flask import Blueprint, request
-from google.appengine.ext import ndb
-from constants import Device, DEFAULT_GEM, DEFAULT_COIN
+from constants import DEFAULT_GEM, DEFAULT_COIN, Device, UserStatus, APIStatus
 from utilities import json_response, get_form
 from entities.user import User, StartupHistory
 from entities.currency import Currency
 from api import *
+from errors import DataError
 
 user_api = Blueprint('user', __name__, url_prefix='/api/user')
 
@@ -14,31 +14,59 @@ def startup():
     from main import app
 
     form = get_form(StartupForm(request.form))
-    uuid, name, version, device = form.uuid.data, form.name.data, form.version.data, form.device.data
-    app.logger.info("User startup, name: %s, device: %d, UUID: %s" % (name, device, uuid))
+    uuid, device, version = form.uuid.data, form.device.data, form.version.data,
+    app.logger.info("App startup, UUID: %s" % uuid)
 
-    user = User.get_by_id(uuid) or create_user(uuid, name, Device.lookup_by_number(device))
+    user = User.get_by_id(uuid)
+    if not user:
+        user = User(id=uuid, device=Device.lookup_by_number(device))
+        user.put()
+        app.logger.info("Created new user: %s" % user)
+
     startup_history = StartupHistory(parent=user.key, version=version, ip=request.remote_addr)
     startup_history.put()
 
     return json_response()
 
 
-@ndb.transactional()
-def create_user(uuid, name, device):
+@user_api.route('/register/', methods=['POST'])
+def register():
     from main import app
 
-    user = User(id=uuid, name=name, device=device)
-    user.put()
-    app.logger.info("Created new user: %s" % user)
+    form = get_form(RegisterForm(request.form))
+    user = User.get(form.uuid.data)
+    if user.status == UserStatus.ACTIVE:
+        raise DataError(APIStatus.DATA_SAVE_FAILED, 'User already registered: %s' % user)
 
-    currency = Currency(parent=user.key, coin=DEFAULT_COIN, gem=DEFAULT_GEM)
+    app.logger.info("User register, UUID: %s" % user.key)
+    user.name = form.name.data
+    user.status = UserStatus.ACTIVE
+    user.put()
+
+    currency = Currency(parent=user.key, gem=DEFAULT_GEM, coin=DEFAULT_COIN)
     currency.put()
 
-    return user
+    return json_response()
+
+
+@user_api.route('/notification/', methods=['POST'])
+def register_notification():
+    form = get_form(PushNotificationForm(request.form))
+    user = User.get(form.uuid.data)
+    user.push_token = form.push_token.data
+    user.put()
+
+    return json_response()
 
 
 class StartupForm(BaseForm):
-    name = StringField('name', [validators.optional(), validators.length(min=1, max=8)])
     version = StringField('version', [validators.length(min=3, max=5)])
     device = IntegerField('device', [validators.number_range(min=0, max=3)])
+
+
+class RegisterForm(BaseForm):
+    name = StringField('name', [validators.optional(), validators.length(min=1, max=8)])
+
+
+class PushNotificationForm(BaseForm):
+    push_token = StringField('push_token', [validators.required(), validators.length(max=500)])

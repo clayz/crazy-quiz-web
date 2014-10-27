@@ -11,7 +11,6 @@ class UserStatus(messages.Enum):
 
 
 class Gender(messages.Enum):
-    UNKNOWN = 0
     MALE = 1
     FEMALE = 2
 
@@ -23,7 +22,6 @@ class AccountType(messages.Enum):
 
 
 class Device(messages.Enum):
-    UNKNOWN = 0
     IPHONE = 1
     IPAD = 2
     ANDROID = 3

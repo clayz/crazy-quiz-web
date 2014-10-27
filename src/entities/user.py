@@ -6,13 +6,14 @@ from errors import DataError
 
 
 class User(BaseEntity):
-    name = ndb.StringProperty(required=True)
+    name = ndb.StringProperty()
     mail = ndb.StringProperty()
-    gender = msgprop.EnumProperty(Gender, required=True, default=Gender.UNKNOWN)
+    gender = msgprop.EnumProperty(Gender)
     birthday = ndb.DateProperty()
     avatar = ndb.BlobProperty(compressed=True)
-    status = msgprop.EnumProperty(UserStatus, required=True, default=UserStatus.ACTIVE)
-    device = msgprop.EnumProperty(Device, required=True, default=Device.UNKNOWN)
+    status = msgprop.EnumProperty(UserStatus, required=True, default=UserStatus.INACTIVE)
+    device = msgprop.EnumProperty(Device, required=True)
+    push_token = ndb.StringProperty()
     update_date = ndb.DateTimeProperty(required=True, auto_now=True)
 
     @classmethod
