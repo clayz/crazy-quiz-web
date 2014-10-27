@@ -3,7 +3,7 @@ from flask import render_template
 from api.user_api import user_api
 from api.audit_api import audit_api
 from errors import ParameterError, DataError
-from utilities import json_response
+from utilities import response
 from constants import APIStatus
 
 app = Flask(__name__)
@@ -30,10 +30,10 @@ def page_not_found(e):
 @app.errorhandler(ParameterError)
 def handle_parameter_error(error):
     app.logger.warn('Parameter error: %s' % error.to_dict())
-    return json_response(APIStatus.PARAMETER_ERROR)
+    return response(APIStatus.PARAMETER_ERROR)
 
 
 @app.errorhandler(DataError)
 def handle_data_error(error):
     app.logger.error(error.to_dict())
-    return json_response(error.api_status)
+    return response(error.api_status)

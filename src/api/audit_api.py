@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from utilities import json_response, get_form
+from utilities import response, get_form
 from entities.user import User
 from entities.audit import Purchase, Exchange, Earn, Consume
 from api import *
@@ -19,7 +19,7 @@ def purchase():
     Purchase(parent=user.key, goods_id=goods_id, product_id=product_id, gem=form.gem.data, cost=form.cost.data, version=form.version.data,
              date=form.date.data).put()
 
-    return json_response()
+    return response()
 
 
 @audit_api.route('/exchange/', methods=['POST'])
@@ -29,7 +29,7 @@ def exchange():
     Exchange(parent=user.key, goods_id=form.goods_id.data, gem=form.gem.data, coin=form.coin.data, version=form.version.data,
              date=form.date.data).put()
 
-    return json_response()
+    return response()
 
 
 @audit_api.route('/earn/', methods=['POST'])
@@ -38,7 +38,7 @@ def earn():
     user = User.get(form.uuid.data)
     Earn(parent=user.key, type_id=form.type_id.data, gem=form.gem.data, coin=form.coin.data, version=form.version.data, date=form.date.data).put()
 
-    return json_response()
+    return response()
 
 
 @audit_api.route('/consume/', methods=['POST'])
@@ -48,7 +48,7 @@ def consume():
     Consume(parent=user.key, type_id=form.type_id.data, gem=form.gem.data, coin=form.coin.data, album=form.album.data, level=form.level.data,
             picture=form.picture.data, version=form.version.data, date=form.date.data).put()
 
-    return json_response()
+    return response()
 
 
 class PurchaseForm(BaseForm):

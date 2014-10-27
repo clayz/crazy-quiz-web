@@ -1,6 +1,7 @@
+from batch.notification import GCMSender
 from flask import Blueprint, request
 from constants import DEFAULT_GEM, DEFAULT_COIN, Device, UserStatus, APIStatus
-from utilities import json_response, get_form
+from utilities import response, get_form
 from entities.user import User, StartupHistory
 from entities.currency import Currency
 from api import *
@@ -26,7 +27,9 @@ def startup():
     startup_history = StartupHistory(parent=user.key, version=version, ip=request.remote_addr)
     startup_history.put()
 
-    return json_response()
+    GCMSender('a').push()
+
+    return response()
 
 
 @user_api.route('/register/', methods=['POST'])
@@ -46,7 +49,7 @@ def register():
     currency = Currency(parent=user.key, gem=DEFAULT_GEM, coin=DEFAULT_COIN)
     currency.put()
 
-    return json_response()
+    return response()
 
 
 @user_api.route('/notification/', methods=['POST'])
@@ -56,7 +59,7 @@ def register_notification():
     user.push_token = form.push_token.data
     user.put()
 
-    return json_response()
+    return response()
 
 
 class StartupForm(BaseForm):
