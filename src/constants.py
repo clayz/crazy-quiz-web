@@ -3,6 +3,8 @@ from protorpc import messages
 DEFAULT_GEM = 5
 DEFAULT_COIN = 100
 
+GAE_API_KEY = 'AIzaSyBYDAT-mStSoq1jJDFUxr_IFBxqy1oNu8U'
+
 
 class UserStatus(messages.Enum):
     ACTIVE = 1

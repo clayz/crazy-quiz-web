@@ -1,4 +1,3 @@
-from batch.notification import GCMSender
 from flask import Blueprint, request
 from constants import DEFAULT_GEM, DEFAULT_COIN, Device, UserStatus, APIStatus
 from utilities import response, get_form
@@ -27,8 +26,6 @@ def startup():
     startup_history = StartupHistory(parent=user.key, version=version, ip=request.remote_addr)
     startup_history.put()
 
-    GCMSender('a').push()
-
     return response()
 
 
@@ -55,9 +52,11 @@ def register():
 @user_api.route('/notification/', methods=['POST'])
 def register_notification():
     form = get_form(PushNotificationForm(request.form))
-    user = User.get(form.uuid.data)
-    user.push_token = form.push_token.data
-    user.put()
+    user, push_token = User.get(form.uuid.data), form.push_token.data
+
+    if user.push_token != push_token:
+        user.push_token = push_token
+        user.put()
 
     return response()
 
