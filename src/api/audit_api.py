@@ -3,6 +3,7 @@ from utilities import response, get_form
 from entities.user import User
 from entities.audit import Purchase, Exchange, Earn, Consume
 from api import *
+from datetime import datetime
 
 audit_api = Blueprint('audit', __name__, url_prefix='/api/audit')
 
@@ -17,7 +18,7 @@ def purchase():
 
     app.logger.info('[%s] Purchased goods_id: %d, product_id: %s' % (uuid, goods_id, product_id))
     Purchase(parent=user.key, goods_id=goods_id, product_id=product_id, gem=form.gem.data, cost=form.cost.data, version=form.version.data,
-             date=form.date.data).put()
+             date=datetime.fromtimestamp(int(form.date.data))).put()
 
     return response()
 
@@ -27,7 +28,7 @@ def exchange():
     form = get_form(ExchangeForm(request.form))
     user = User.get(form.uuid.data)
     Exchange(parent=user.key, goods_id=form.goods_id.data, gem=form.gem.data, coin=form.coin.data, version=form.version.data,
-             date=form.date.data).put()
+             date=datetime.fromtimestamp(int(form.date.data))).put()
 
     return response()
 
@@ -36,7 +37,8 @@ def exchange():
 def earn():
     form = get_form(EarnForm(request.form))
     user = User.get(form.uuid.data)
-    Earn(parent=user.key, type_id=form.type_id.data, gem=form.gem.data, coin=form.coin.data, version=form.version.data, date=form.date.data).put()
+    Earn(parent=user.key, type_id=form.type_id.data, gem=form.gem.data, coin=form.coin.data, version=form.version.data,
+         date=datetime.fromtimestamp(int(form.date.data))).put()
 
     return response()
 
@@ -46,7 +48,7 @@ def consume():
     form = get_form(ConsumeForm(request.form))
     user = User.get(form.uuid.data)
     Consume(parent=user.key, type_id=form.type_id.data, gem=form.gem.data, coin=form.coin.data, album=form.album.data, level=form.level.data,
-            picture=form.picture.data, version=form.version.data, date=form.date.data).put()
+            picture=form.picture.data, version=form.version.data, date=datetime.fromtimestamp(int(form.date.data))).put()
 
     return response()
 
@@ -57,7 +59,7 @@ class PurchaseForm(BaseForm):
     gem = IntegerField('gem', [validators.input_required()])
     cost = IntegerField('cost', [validators.input_required()])
     version = StringField('version', [validators.length(min=3, max=5)])
-    date = DateTimeField('date', [validators.input_required()])
+    date = IntegerField('date', [validators.input_required()])
 
 
 class ExchangeForm(BaseForm):
@@ -65,7 +67,7 @@ class ExchangeForm(BaseForm):
     gem = IntegerField('gem', [validators.input_required()])
     coin = IntegerField('coin', [validators.input_required()])
     version = StringField('version', [validators.length(min=3, max=5)])
-    date = DateTimeField('date', [validators.input_required()])
+    date = IntegerField('date', [validators.input_required()])
 
 
 class EarnForm(BaseForm):
@@ -73,7 +75,7 @@ class EarnForm(BaseForm):
     gem = IntegerField('gem', [validators.optional()])
     coin = IntegerField('coin', [validators.optional()])
     version = StringField('version', [validators.length(min=3, max=5)])
-    date = DateTimeField('date', [validators.input_required()])
+    date = IntegerField('date', [validators.input_required()])
 
 
 class ConsumeForm(BaseForm):
@@ -84,4 +86,4 @@ class ConsumeForm(BaseForm):
     level = IntegerField('level', [validators.optional()])
     picture = IntegerField('picture', [validators.optional()])
     version = StringField('version', [validators.length(min=3, max=5)])
-    date = DateTimeField('date', [validators.input_required()])
+    date = IntegerField('date', [validators.input_required()])
