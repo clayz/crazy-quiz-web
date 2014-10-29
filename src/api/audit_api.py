@@ -1,6 +1,6 @@
 from google.appengine.ext import ndb
 from flask import Blueprint, request
-from utilities import response, get_form
+from utilities import response, get_form, get_timestamp
 from entities.user import User
 from entities.audit import Purchase, Exchange, Earn, Consume
 from api import *
@@ -10,15 +10,50 @@ audit_api = Blueprint('audit', __name__, url_prefix='/api/audit')
 
 
 @audit_api.route('/last/<string:uuid>/')
-def last_timestamp(uuid):
-    user_key = ndb.Key(User, uuid)
-    last_purchase = Purchase.get_last(user_key).fetch(1)
+def last(uuid):
+    from main import app
 
-    return response(last_purchase=last_purchase[0].date if last_purchase else None)
+    user_key = ndb.Key(User, uuid)
+    purchase = Purchase.get_last(user_key).fetch(1)
+    exchange = Exchange.get_last(user_key).fetch(1)
+    earn = Earn.get_last(user_key).fetch(1)
+    consume = Consume.get_last(user_key).fetch(1)
+
+    app.logger.info('[%s] Retrieve last purchase: %s' % (uuid, purchase))
+    app.logger.info('[%s] Retrieve last exchange: %s' % (uuid, exchange))
+    app.logger.info('[%s] Retrieve last earn: %s' % (uuid, earn))
+    app.logger.info('[%s] Retrieve last consume: %s' % (uuid, consume))
+
+    return response(purchase=get_timestamp(purchase[0].date) if purchase else None,
+                    exchange=get_timestamp(exchange[0].date) if exchange else None,
+                    earn=get_timestamp(earn[0].date) if earn else None,
+                    consume=get_timestamp(consume[0].date) if consume else None)
+
+
+@audit_api.route('/sync/', methods=['POST'])
+def sync():
+    from main import app
+
+    data = request.json
+    app.logger.info('data: %s' % data)
+
+    if 'purchase' in data:
+        app.logger.info('purchase: %s' % data['purchase'])
+
+    if 'exchange' in data:
+        app.logger.info('exchange: %s' % data['exchange'])
+
+    if 'earn' in data:
+        app.logger.info('earn: %s' % data['earn'])
+
+    if 'consume' in data:
+        app.logger.info('consume: %s' % data['consume'])
+
+    return response()
 
 
 @audit_api.route('/purchase/', methods=['POST'])
-def purchase():
+def save_purchase():
     from main import app
 
     form = get_form(PurchaseForm(request.form))
@@ -33,7 +68,7 @@ def purchase():
 
 
 @audit_api.route('/exchange/', methods=['POST'])
-def exchange():
+def save_exchange():
     form = get_form(ExchangeForm(request.form))
     user = User.get(form.uuid.data)
     Exchange(parent=user.key, goods_id=form.goods_id.data, gem=form.gem.data, coin=form.coin.data, version=form.version.data,
@@ -43,7 +78,7 @@ def exchange():
 
 
 @audit_api.route('/earn/', methods=['POST'])
-def earn():
+def save_earn():
     form = get_form(EarnForm(request.form))
     user = User.get(form.uuid.data)
     Earn(parent=user.key, type_id=form.type_id.data, gem=form.gem.data, coin=form.coin.data, version=form.version.data,
@@ -53,7 +88,7 @@ def earn():
 
 
 @audit_api.route('/consume/', methods=['POST'])
-def consume():
+def save_consume():
     form = get_form(ConsumeForm(request.form))
     user = User.get(form.uuid.data)
     Consume(parent=user.key, type_id=form.type_id.data, gem=form.gem.data, coin=form.coin.data, album=form.album.data, level=form.level.data,

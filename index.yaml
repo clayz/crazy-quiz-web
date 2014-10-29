@@ -10,6 +10,24 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
+- kind: Consume
+  ancestor: yes
+  properties:
+  - name: date
+    direction: desc
+
+- kind: Earn
+  ancestor: yes
+  properties:
+  - name: date
+    direction: desc
+
+- kind: Exchange
+  ancestor: yes
+  properties:
+  - name: date
+    direction: desc
+
 - kind: Purchase
   ancestor: yes
   properties:

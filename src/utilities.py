@@ -1,14 +1,17 @@
 from flask import jsonify
 from constants import APIStatus
 from errors import ParameterError
+import time
 
 
 def response(status=APIStatus.SUCCESS, message='', **kwargs):
     data = {
         'status': status.__int__(),
-        'message': message,
-        'data': kwargs
+        'message': message
     }
+
+    if len(kwargs):
+        data['data'] = kwargs
 
     return jsonify(data)
 
@@ -18,3 +21,7 @@ def get_form(form):
         return form
     else:
         raise ParameterError(form.errors.items())
+
+
+def get_timestamp(date):
+    return time.mktime(date.timetuple())
