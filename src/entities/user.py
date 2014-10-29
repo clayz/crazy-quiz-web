@@ -25,6 +25,13 @@ class User(BaseEntity):
             raise DataError(APIStatus.DATA_NOT_FOUND, 'User not found, uuid: %s' % uuid)
 
 
+class Currency(BaseEntity):
+    gem = ndb.IntegerProperty(required=True, default=0)
+    coin = ndb.IntegerProperty(required=True, default=0)
+    total_spend = ndb.IntegerProperty(required=True, default=0)
+    update_date = ndb.DateTimeProperty(required=True, auto_now=True)
+
+
 class StartupHistory(BaseEntity):
     version = ndb.StringProperty(required=True)
     ip = ndb.StringProperty(required=True)

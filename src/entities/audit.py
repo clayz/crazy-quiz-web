@@ -10,6 +10,10 @@ class Purchase(BaseEntity):
     version = ndb.StringProperty(required=True)
     date = ndb.DateTimeProperty(required=True)
 
+    @classmethod
+    def get_last(cls, user_key):
+        return cls.query(ancestor=user_key).order(-cls.date)
+
 
 class Exchange(BaseEntity):
     goods_id = ndb.IntegerProperty(required=True)

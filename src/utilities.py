@@ -3,8 +3,14 @@ from constants import APIStatus
 from errors import ParameterError
 
 
-def response(status=APIStatus.SUCCESS, message='', *args, **kwargs):
-    return jsonify(status=status.__int__(), message=message, *args, **kwargs)
+def response(status=APIStatus.SUCCESS, message='', **kwargs):
+    data = {
+        'status': status.__int__(),
+        'message': message,
+        'data': kwargs
+    }
+
+    return jsonify(data)
 
 
 def get_form(form):

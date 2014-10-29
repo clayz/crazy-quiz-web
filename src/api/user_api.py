@@ -2,8 +2,7 @@ from google.appengine.ext import ndb
 from flask import Blueprint, request
 from constants import DEFAULT_GEM, DEFAULT_COIN, Device, UserStatus, APIStatus
 from utilities import response, get_form
-from entities.user import User, StartupHistory
-from entities.currency import Currency
+from entities.user import User, Currency, StartupHistory
 from api import *
 from errors import DataError
 

@@ -1,3 +1,4 @@
+from google.appengine.ext import ndb
 from flask import Blueprint, request
 from utilities import response, get_form
 from entities.user import User
@@ -6,6 +7,14 @@ from api import *
 from datetime import datetime
 
 audit_api = Blueprint('audit', __name__, url_prefix='/api/audit')
+
+
+@audit_api.route('/last/<string:uuid>/')
+def last_timestamp(uuid):
+    user_key = ndb.Key(User, uuid)
+    last_purchase = Purchase.get_last(user_key).fetch(1)
+
+    return response(last_purchase=last_purchase[0].date if last_purchase else None)
 
 
 @audit_api.route('/purchase/', methods=['POST'])
