@@ -1,6 +1,6 @@
 from google.appengine.ext import ndb
 from flask import Blueprint, request
-from utilities import response, get_form, get_timestamp
+from utilities import response, get_form, get_timestamp, get_date_from_js_timestamp
 from entities.user import User
 from entities.audit import Purchase, Exchange, Earn, Consume
 from api import *
@@ -9,47 +9,19 @@ from datetime import datetime
 audit_api = Blueprint('audit', __name__, url_prefix='/api/audit')
 
 
-@audit_api.route('/last/<string:uuid>/')
-def last(uuid):
-    from main import app
-
-    user_key = ndb.Key(User, uuid)
-    purchase = Purchase.get_last(user_key).fetch(1)
-    exchange = Exchange.get_last(user_key).fetch(1)
-    earn = Earn.get_last(user_key).fetch(1)
-    consume = Consume.get_last(user_key).fetch(1)
-
-    app.logger.info('[%s] Retrieve last purchase: %s' % (uuid, purchase))
-    app.logger.info('[%s] Retrieve last exchange: %s' % (uuid, exchange))
-    app.logger.info('[%s] Retrieve last earn: %s' % (uuid, earn))
-    app.logger.info('[%s] Retrieve last consume: %s' % (uuid, consume))
-
-    return response(purchase=get_timestamp(purchase[0].date) if purchase else None,
-                    exchange=get_timestamp(exchange[0].date) if exchange else None,
-                    earn=get_timestamp(earn[0].date) if earn else None,
-                    consume=get_timestamp(consume[0].date) if consume else None)
-
-
 @audit_api.route('/sync/', methods=['POST'])
 def sync():
     from main import app
 
     data = request.json
-    app.logger.info('data: %s' % data)
+    uuid, version = data['uuid'], data['version']
+    app.logger.debug('[%s] Received sync data: %s' % (uuid, data))
 
-    if 'purchase' in data:
-        app.logger.info('purchase: %s' % data['purchase'])
+    user = User.get(uuid)
+    sync_history(user.key, version, data)
+    last_purchase, last_exchange, last_earn, last_consume = get_last_sync_timestamp(user.key)
 
-    if 'exchange' in data:
-        app.logger.info('exchange: %s' % data['exchange'])
-
-    if 'earn' in data:
-        app.logger.info('earn: %s' % data['earn'])
-
-    if 'consume' in data:
-        app.logger.info('consume: %s' % data['consume'])
-
-    return response()
+    return response(purchase=last_purchase, exchange=last_exchange, earn=last_earn, consume=last_consume)
 
 
 @audit_api.route('/purchase/', methods=['POST'])
@@ -57,12 +29,10 @@ def save_purchase():
     from main import app
 
     form = get_form(PurchaseForm(request.form))
-    uuid, goods_id, product_id = form.uuid.data, form.goods_id.data, form.product_id.data
+    uuid, goods_id = form.uuid.data, form.goods_id.data
     user = User.get(uuid)
-
-    app.logger.info('[%s] Purchased goods_id: %d, product_id: %s' % (uuid, goods_id, product_id))
-    Purchase(parent=user.key, goods_id=goods_id, product_id=product_id, gem=form.gem.data, cost=form.cost.data, version=form.version.data,
-             date=datetime.fromtimestamp(int(form.date.data))).put()
+    app.logger.info('[%s] Purchased goods_id: %d' % (uuid, goods_id))
+    Purchase(parent=user.key, goods_id=goods_id, version=form.version.data, date=datetime.fromtimestamp(int(form.date.data))).put()
 
     return response()
 
@@ -71,8 +41,7 @@ def save_purchase():
 def save_exchange():
     form = get_form(ExchangeForm(request.form))
     user = User.get(form.uuid.data)
-    Exchange(parent=user.key, goods_id=form.goods_id.data, gem=form.gem.data, coin=form.coin.data, version=form.version.data,
-             date=datetime.fromtimestamp(int(form.date.data))).put()
+    Exchange(parent=user.key, goods_id=form.goods_id.data, version=form.version.data, date=datetime.fromtimestamp(int(form.date.data))).put()
 
     return response()
 
@@ -81,8 +50,7 @@ def save_exchange():
 def save_earn():
     form = get_form(EarnForm(request.form))
     user = User.get(form.uuid.data)
-    Earn(parent=user.key, type_id=form.type_id.data, gem=form.gem.data, coin=form.coin.data, version=form.version.data,
-         date=datetime.fromtimestamp(int(form.date.data))).put()
+    Earn(parent=user.key, type_id=form.type_id.data, version=form.version.data, date=datetime.fromtimestamp(int(form.date.data))).put()
 
     return response()
 
@@ -91,41 +59,73 @@ def save_earn():
 def save_consume():
     form = get_form(ConsumeForm(request.form))
     user = User.get(form.uuid.data)
-    Consume(parent=user.key, type_id=form.type_id.data, gem=form.gem.data, coin=form.coin.data, album=form.album.data, level=form.level.data,
-            picture=form.picture.data, version=form.version.data, date=datetime.fromtimestamp(int(form.date.data))).put()
+    Consume(parent=user.key, type_id=form.type_id.data, album=form.album.data, level=form.level.data, picture=form.picture.data,
+            version=form.version.data, date=datetime.fromtimestamp(int(form.date.data))).put()
 
     return response()
 
 
+@ndb.transactional()
+def sync_history(user_key, version, data):
+    from main import app
+
+    last_purchase, last_exchange, last_earn, last_consume = get_last_sync_timestamp(user_key)
+    purchases, exchanges, earns, consumes = data['purchase'], data['exchange'], data['earn'], data['consume']
+
+    for purchase in purchases:
+        if int(purchase['date'] / 1000) > last_purchase:
+            app.logger.debug('Save new purchase: %s' % purchase)
+            Purchase(parent=user_key, goods_id=purchase['goods'], version=version, date=get_date_from_js_timestamp(purchase['date'])).put()
+
+    for exchange in exchanges:
+        if int(exchange['date'] / 1000 > last_exchange):
+            app.logger.debug('Save new exchange: %s' % exchange)
+            Exchange(parent=user_key, goods_id=exchange['goods'], version=version, date=get_date_from_js_timestamp(exchange['date'])).put()
+
+    for earn in earns:
+        if int(earn['date'] / 1000 > last_earn):
+            app.logger.debug('Save new earn: %s' % earn)
+            Earn(parent=user_key, type_id=earn['type'], version=version, date=get_date_from_js_timestamp(earn['date'])).put()
+
+    for consume in consumes:
+        if int(consume['date'] / 1000 > last_consume):
+            app.logger.debug('Save new consume: %s' % consume)
+            Consume(parent=user_key, type_id=consume['type'], album=consume['album'], level=consume['level'], picture=consume['picture'],
+                    version=version, date=get_date_from_js_timestamp(consume['date'])).put()
+
+
+def get_last_sync_timestamp(user_key):
+    purchase = Purchase.get_last(user_key).fetch(1)
+    exchange = Exchange.get_last(user_key).fetch(1)
+    earn = Earn.get_last(user_key).fetch(1)
+    consume = Consume.get_last(user_key).fetch(1)
+
+    return (get_timestamp(purchase[0].date) if purchase else None,
+            get_timestamp(exchange[0].date) if exchange else None,
+            get_timestamp(earn[0].date) if earn else None,
+            get_timestamp(consume[0].date) if consume else None)
+
+
 class PurchaseForm(BaseForm):
     goods_id = IntegerField('goods_id', [validators.input_required()])
-    product_id = StringField('product_id', [validators.input_required(), validators.length(max=100)])
-    gem = IntegerField('gem', [validators.input_required()])
-    cost = IntegerField('cost', [validators.input_required()])
     version = StringField('version', [validators.length(min=3, max=5)])
     date = IntegerField('date', [validators.input_required()])
 
 
 class ExchangeForm(BaseForm):
     goods_id = IntegerField('goods_id', [validators.input_required()])
-    gem = IntegerField('gem', [validators.input_required()])
-    coin = IntegerField('coin', [validators.input_required()])
     version = StringField('version', [validators.length(min=3, max=5)])
     date = IntegerField('date', [validators.input_required()])
 
 
 class EarnForm(BaseForm):
     type_id = IntegerField('type_id', [validators.input_required()])
-    gem = IntegerField('gem', [validators.optional()])
-    coin = IntegerField('coin', [validators.optional()])
     version = StringField('version', [validators.length(min=3, max=5)])
     date = IntegerField('date', [validators.input_required()])
 
 
 class ConsumeForm(BaseForm):
     type_id = IntegerField('type_id', [validators.input_required()])
-    gem = IntegerField('gem', [validators.optional()])
-    coin = IntegerField('coin', [validators.optional()])
     album = IntegerField('album', [validators.optional()])
     level = IntegerField('level', [validators.optional()])
     picture = IntegerField('picture', [validators.optional()])

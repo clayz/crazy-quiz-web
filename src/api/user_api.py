@@ -57,7 +57,7 @@ def register_notification():
     user, push_token = User.get(form.uuid.data), form.push_token.data
 
     if user.push_token != push_token:
-        app.logger.info('Update push token, uuid: %s, push_token: %s' % user.key, push_token)
+        app.logger.info('Update push token, uuid: %s, push_token: %s' % (user.key, push_token))
         user.push_token = push_token
         user.put()
 
