@@ -14,11 +14,10 @@ def sync():
     from main import app
 
     data = request.json
-    uuid, version = data['uuid'], data['version']
-    app.logger.debug('[%s] Received sync data: %s' % (uuid, data))
+    app.logger.debug('Received sync data: %s' % data)
 
-    user = User.get(uuid)
-    sync_history(user.key, version, data)
+    user = User.get(data['uuid'])
+    sync_history(user.key, data['version'], data)
     last_purchase, last_exchange, last_earn, last_consume = get_last_sync_timestamp(user.key)
 
     return response(purchase=last_purchase, exchange=last_exchange, earn=last_earn, consume=last_consume)
