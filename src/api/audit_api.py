@@ -17,7 +17,7 @@ def sync():
     app.logger.debug('Received sync data: %s' % data)
 
     user = User.get(data['uuid'])
-    sync_history(user.key, data['version'], data)
+    sync_history(user.key, data['version'], data['history'])
     last_purchase, last_exchange, last_earn, last_consume = get_last_sync_timestamp(user.key)
 
     return response(purchase=last_purchase, exchange=last_exchange, earn=last_earn, consume=last_consume)
@@ -65,11 +65,11 @@ def save_consume():
 
 
 @ndb.transactional()
-def sync_history(user_key, version, data):
+def sync_history(user_key, version, history):
     from main import app
 
     last_purchase, last_exchange, last_earn, last_consume = get_last_sync_timestamp(user_key)
-    purchases, exchanges, earns, consumes = data['purchase'], data['exchange'], data['earn'], data['consume']
+    purchases, exchanges, earns, consumes = history['purchase'], history['exchange'], history['earn'], history['consume']
 
     for purchase in purchases:
         if int(purchase['date'] / 1000) > last_purchase:
@@ -77,20 +77,23 @@ def sync_history(user_key, version, data):
             Purchase(parent=user_key, goods_id=purchase['goods'], version=version, date=get_date_from_js_timestamp(purchase['date'])).put()
 
     for exchange in exchanges:
-        if int(exchange['date'] / 1000 > last_exchange):
+        if int(exchange['date'] / 1000) > last_exchange:
             app.logger.debug('Save new exchange: %s' % exchange)
             Exchange(parent=user_key, goods_id=exchange['goods'], version=version, date=get_date_from_js_timestamp(exchange['date'])).put()
 
     for earn in earns:
-        if int(earn['date'] / 1000 > last_earn):
+        if int(earn['date'] / 1000) > last_earn:
             app.logger.debug('Save new earn: %s' % earn)
             Earn(parent=user_key, type_id=earn['type'], version=version, date=get_date_from_js_timestamp(earn['date'])).put()
 
     for consume in consumes:
-        if int(consume['date'] / 1000 > last_consume):
+        if int(consume['date'] / 1000) > last_consume:
             app.logger.debug('Save new consume: %s' % consume)
-            Consume(parent=user_key, type_id=consume['type'], album=consume['album'], level=consume['level'], picture=consume['picture'],
-                    version=version, date=get_date_from_js_timestamp(consume['date'])).put()
+            album = consume['album'] if 'album' in consume else None
+            level = consume['level'] if 'level' in consume else None
+            picture = consume['picture'] if 'picture' in consume else None
+            Consume(parent=user_key, type_id=consume['type'], album=album, level=level, picture=picture, version=version,
+                    date=get_date_from_js_timestamp(consume['date'])).put()
 
 
 def get_last_sync_timestamp(user_key):
