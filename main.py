@@ -2,6 +2,7 @@ from flask import Flask
 from flask import render_template
 from api.user_api import user_api
 from api.audit_api import audit_api
+from api.sns_api import sns_api
 from errors import ParameterError, DataError
 from utilities import response
 from constants import APIStatus
@@ -10,6 +11,7 @@ app = Flask(__name__)
 app.config.from_pyfile('settings.cfg')
 app.register_blueprint(user_api)
 app.register_blueprint(audit_api)
+app.register_blueprint(sns_api)
 
 
 @app.route('/')
