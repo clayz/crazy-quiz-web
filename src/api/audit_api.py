@@ -1,6 +1,6 @@
 from google.appengine.ext import ndb
 from flask import Blueprint, request
-from utilities import response, get_form, get_timestamp, get_date_from_js_timestamp
+from utilities import response, get_form, Date
 from entities.user import User
 from entities.audit import Purchase, Exchange, Earn, Consume
 from api import *
@@ -74,17 +74,17 @@ def sync_history(user_key, version, history):
     for purchase in purchases:
         if int(purchase['date'] / 1000) > last_purchase:
             app.logger.debug('Save new purchase: %s' % purchase)
-            Purchase(parent=user_key, goods_id=purchase['goods'], version=version, date=get_date_from_js_timestamp(purchase['date'])).put()
+            Purchase(parent=user_key, goods_id=purchase['goods'], version=version, date=Date.get_date_from_js_timestamp(purchase['date'])).put()
 
     for exchange in exchanges:
         if int(exchange['date'] / 1000) > last_exchange:
             app.logger.debug('Save new exchange: %s' % exchange)
-            Exchange(parent=user_key, goods_id=exchange['goods'], version=version, date=get_date_from_js_timestamp(exchange['date'])).put()
+            Exchange(parent=user_key, goods_id=exchange['goods'], version=version, date=Date.get_date_from_js_timestamp(exchange['date'])).put()
 
     for earn in earns:
         if int(earn['date'] / 1000) > last_earn:
             app.logger.debug('Save new earn: %s' % earn)
-            Earn(parent=user_key, type_id=earn['type'], version=version, date=get_date_from_js_timestamp(earn['date'])).put()
+            Earn(parent=user_key, type_id=earn['type'], version=version, date=Date.get_date_from_js_timestamp(earn['date'])).put()
 
     for consume in consumes:
         if int(consume['date'] / 1000) > last_consume:
@@ -93,7 +93,7 @@ def sync_history(user_key, version, history):
             level = consume['level'] if 'level' in consume else None
             picture = consume['picture'] if 'picture' in consume else None
             Consume(parent=user_key, type_id=consume['type'], album=album, level=level, picture=picture, version=version,
-                    date=get_date_from_js_timestamp(consume['date'])).put()
+                    date=Date.get_date_from_js_timestamp(consume['date'])).put()
 
 
 def get_last_sync_timestamp(user_key):
@@ -102,10 +102,10 @@ def get_last_sync_timestamp(user_key):
     earn = Earn.get_last(user_key).fetch(1)
     consume = Consume.get_last(user_key).fetch(1)
 
-    return (get_timestamp(purchase[0].date) if purchase else None,
-            get_timestamp(exchange[0].date) if exchange else None,
-            get_timestamp(earn[0].date) if earn else None,
-            get_timestamp(consume[0].date) if consume else None)
+    return (Date.get_timestamp(purchase[0].date) if purchase else None,
+            Date.get_timestamp(exchange[0].date) if exchange else None,
+            Date.get_timestamp(earn[0].date) if earn else None,
+            Date.get_timestamp(consume[0].date) if consume else None)
 
 
 class PurchaseForm(BaseForm):
