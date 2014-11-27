@@ -6,6 +6,7 @@ from api.sns_api import sns_api
 from errors import ParameterError, DataError
 from utilities import response
 from constants import APIStatus
+from batch.notification import apns_push
 
 app = Flask(__name__)
 app.config.from_pyfile('settings.cfg')
@@ -22,6 +23,12 @@ def index():
 @app.route('/api/version/')
 def version():
     return app.config['VERSION']
+
+
+@app.route('/api/notification/')
+def notification():
+    apns_push()
+    return 'Push notification test'
 
 
 @app.errorhandler(404)
