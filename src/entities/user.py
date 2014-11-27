@@ -13,6 +13,8 @@ class User(BaseEntity):
     avatar = ndb.BlobProperty(compressed=True)
     status = msgprop.EnumProperty(UserStatus, required=True, default=UserStatus.INACTIVE)
     device = msgprop.EnumProperty(Device, required=True)
+    continue_got_count = ndb.IntegerProperty(required=True, default=0)
+    last_got_datetime = ndb.DateTimeProperty()
     push_token = ndb.StringProperty()
     update_date = ndb.DateTimeProperty(required=True, auto_now=True)
 

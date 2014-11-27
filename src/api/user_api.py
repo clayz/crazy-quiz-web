@@ -1,7 +1,7 @@
 from google.appengine.ext import ndb
 from flask import Blueprint, request
 from constants import DEFAULT_GEM, DEFAULT_COIN, Device, UserStatus, APIStatus
-from utilities import response, get_form
+from utilities import response, get_form, Date
 from entities.user import User, Currency, StartupHistory
 from api import *
 from errors import DataError
@@ -22,6 +22,7 @@ def startup():
     if user.status == UserStatus.INACTIVE and name != '':
         user.name = name
         user.status = UserStatus.ACTIVE
+        user.continue_got_count = 0
         user.put()
         app.logger.info("Active user: %s" % user)
 
@@ -31,7 +32,7 @@ def startup():
     return response()
 
 
-@user_api.route('/register/', methods=['POST'])
+@user_api.route('/register/', methods=['GET'])
 def register():
     from main import app
 
@@ -44,6 +45,71 @@ def register():
     app.logger.info("User register, uuid: %s" % user.key)
     user.name = form.name.data
     user.status = UserStatus.ACTIVE
+    user.continue_got_count = 0
+    user.put()
+
+    return response()
+
+@user_api.route('/bonus/daily/', methods=['POST'])
+def daily_bonus():
+    from main import app
+
+    form = get_form(RegisterForm(request.form))
+    user = User.get(form.uuid.data)
+
+    if_got_today = False
+    count = user.continue_got_count
+    last_got_date = user.last_got_datetime
+
+    if last_got_date is not None:
+        last_got_date = Date.get_date_jp(last_got_date).date()
+        date_now = Date.get_date_jp().date()
+
+        if (date_now - last_got_date).days > 1:
+            count = 0
+        elif (date_now - last_got_date).days == 0:
+            # has got bonus today
+            if_got_today = True
+
+    # if last got count over 7, next time got bonus should start from 1.
+    if count == 7:
+        count = 1
+    else:
+        count += 1
+
+    return response(is_got_today=if_got_today, next_count=count)
+
+@user_api.route('/bonus/daily/save/', methods=['POST'])
+def daily_bonus_save():
+    from main import app
+
+    form = get_form(RegisterForm(request.form))
+    user = User.get(form.uuid.data)
+
+    datetime_now = Date.now()
+    last_got_date = user.last_got_datetime
+
+    if last_got_date is not None:
+        last_got_date = Date.get_date_jp(last_got_date).date()
+        date_now = Date.get_date_jp(datetime_now).date()
+
+        if (date_now - last_got_date).days > 1:
+            # could not continue got bonus from last time
+            user.last_got_datetime = datetime_now
+            user.continue_got_count = 1
+        elif (date_now - last_got_date).days == 1:
+            # continue to got bonus from last time
+            user.last_got_datetime = datetime_now
+            user.continue_got_count += 1
+    else:
+        # first time got daily bonus
+        user.last_got_datetime = datetime_now
+        user.continue_got_count = 1
+
+    # if continue got count next time over 7, turn it to 1.
+    if user.continue_got_count > 7:
+        user.continue_got_count = 1
+
     user.put()
 
     return response()
