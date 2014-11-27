@@ -1,0 +1,13 @@
+*.pyc
+*.swp
+env.sh
+.coverage
+.env
+.idea
+.pdbrc
+.tox
+build
+dist
+cassettes
+htmlcov
+tweepy.egg-info
