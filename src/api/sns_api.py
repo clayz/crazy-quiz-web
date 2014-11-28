@@ -51,8 +51,6 @@ def share_facebook():
     try:
         if picture:
             app.logger.debug('Share picture, uuid: %s, message: %s, picture: %d' % (uuid, message, picture))
-            # image = urllib2.urlopen('http://crazy-quiz-dev.appspot.com/static/img/album/default/100.png')
-            # fn = os.path.join(os.path.dirname(__file__), '100.png')
             fn = os.path.join(os.path.dirname(__file__), '../../static/img/album/default/100.png')
             graph.put_photo(open(fn), 'Look at this cool photo!')
         else:

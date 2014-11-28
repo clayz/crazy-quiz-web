@@ -198,7 +198,7 @@ class GraphAPI(object):
         an album for your application.
 
         """
-        object_id = album_id or "me"
+        object_id = album_id or "me/photos"
         kwargs.update({"message": message})
         self.request(self.version + "/" + object_id,
                      post_args=kwargs,
