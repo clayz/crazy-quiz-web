@@ -2,13 +2,13 @@
 
 from google.appengine.ext import ndb
 from flask import Blueprint, request
-# import urllib2
 import tweepy
 import facebook as fb
 import os
-from constants import TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET
+from constants import TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET, APIStatus
+from errors import DataError
 from api import *
-from utilities import response, get_form, Date
+from utilities import response, get_form
 from entities.sns import Facebook, Twitter
 from entities.user import User
 
@@ -42,20 +42,19 @@ def share_facebook():
     from main import app
 
     form = get_form(ShareForm(request.form))
-    uuid, message, picture = form.uuid.data, form.message.data, form.picture.data
+    uuid, message, album, picture = form.uuid.data, form.message.data, form.album.data, form.picture.data
 
     user = User.get(uuid)
     facebook = Facebook.get(user.key)
     graph = fb.GraphAPI(facebook.access_token)
 
     try:
-        if picture:
+        if album and picture:
             app.logger.debug('Share picture, uuid: %s, message: %s, picture: %d' % (uuid, message, picture))
-            fn = os.path.join(os.path.dirname(__file__), '../../static/img/album/default/100.png')
-            graph.put_photo(open(fn), 'Look at this cool photo!')
+            graph.put_photo(open(get_picture_path(album, picture)), '【熱狂クイズ】%s facebook.com/nekyou.quiz' % message)
         else:
             app.logger.debug('Share message, uuid: %s, message: %s' % (uuid, message))
-            graph.put_object('me', 'feed', link='http://www.facebook.com/nekyou.quiz', message=message)
+            graph.put_object('me', 'feed', link='http://www.facebook.com/nekyou.quiz', message='【熱狂クイズ】%s facebook.com/nekyou.quiz' % message)
     except Exception as e:
         app.logger.error('Twitter share failed: %s' % str(e))
 
@@ -89,7 +88,7 @@ def share_twitter():
     from main import app
 
     form = get_form(ShareForm(request.form))
-    uuid, message, picture = form.uuid.data, form.message.data, form.picture.data
+    uuid, message, album, picture = form.uuid.data, form.message.data, form.album.data, form.picture.data
 
     user = User.get(uuid)
     twitter = Twitter.get(user.key)
@@ -99,17 +98,27 @@ def share_twitter():
     api = tweepy.API(auth)
 
     try:
-        if picture:
+        if album and picture:
             app.logger.debug('Share picture, uuid: %s, message: %s, picture: %d' % (uuid, message, picture))
-            fn = os.path.join(os.path.dirname(__file__), '../../static/img/album/default/100.png')
-            api.update_with_media(fn, '【熱狂クイズ】Look at this cool photo! %s' % str(Date.now()))
+            api.update_with_media(get_picture_path(album, picture), '【熱狂クイズ】%s' % message)
         else:
             app.logger.debug('Share message, uuid: %s, message: %s' % (uuid, message))
-            api.update_status('【熱狂クイズ】Updating using OAuth authentication via Tweepy! %s' % str(Date.now()))
+            api.update_status('【熱狂クイズ】%s' % message)
     except Exception as e:
         app.logger.error('Twitter share failed: %s' % str(e))
 
     return response()
+
+
+def get_picture_path(album, picture):
+    if album == 1:
+        path = os.path.join(os.path.dirname(__file__), '../../static/img/album/default/%d.png' % picture)
+    elif album == 2:
+        path = os.path.join(os.path.dirname(__file__), '../../static/img/album/default/%d.png' % picture)
+    else:
+        raise DataError(APIStatus.DATA_INCORRECT, 'Unsupported album: %d' % album)
+
+    return path
 
 
 class FacebookForm(BaseForm):
@@ -126,4 +135,5 @@ class TwitterForm(BaseForm):
 
 class ShareForm(BaseForm):
     message = StringField('message', [validators.input_required()])
+    album = IntegerField('album', [validators.optional()])
     picture = IntegerField('picture', [validators.optional()])
