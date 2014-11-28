@@ -1,17 +1,15 @@
 # coding=utf-8
 
 from google.appengine.ext import ndb
-import os
-import urllib2
-# from tweepy.streaming import StreamListener
-# from tweepy import OAuthHandler
-# from tweepy import Stream
-# import tweepy
 from flask import Blueprint, request
+# import urllib2
+import tweepy
 import facebook as fb
+import os
+from constants import TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET
 from api import *
-from utilities import response, get_form
-from entities.sns import Facebook, Twitter, Instagram
+from utilities import response, get_form, Date
+from entities.sns import Facebook, Twitter
 from entities.user import User
 
 sns_api = Blueprint('sns', __name__, url_prefix='/api/sns')
@@ -19,14 +17,18 @@ sns_api = Blueprint('sns', __name__, url_prefix='/api/sns')
 
 @sns_api.route('/auth/facebook/', methods=['POST'])
 def auth_facebook():
+    from main import app
+
     form = get_form(FacebookForm(request.form))
     uuid, access_token, expires, code = form.uuid.data, form.access_token.data, form.expires.data, form.code.data
     user_key = User.get(uuid).key
     facebook = Facebook.get(user_key)
 
     if not facebook:
+        app.logger.debug('Create Facebook, uuid: %s, access_token: %s' % (uuid, access_token))
         Facebook(parent=user_key, access_token=access_token, expires=expires, code=code).put()
     elif facebook.access_token != access_token:
+        app.logger.debug('Update Facebook, uuid: %s, access_token: %s' % (uuid, access_token))
         facebook.access_token = access_token
         facebook.expires = expires
         facebook.code = code
@@ -37,6 +39,8 @@ def auth_facebook():
 
 @sns_api.route('/share/facebook/', methods=['POST'])
 def share_facebook():
+    from main import app
+
     form = get_form(ShareForm(request.form))
     uuid, message, picture = form.uuid.data, form.message.data, form.picture.data
 
@@ -44,27 +48,36 @@ def share_facebook():
     facebook = Facebook.get(user.key)
     graph = fb.GraphAPI(facebook.access_token)
 
-    if picture:
-        # image = urllib2.urlopen('http://crazy-quiz-dev.appspot.com/static/img/album/default/100.png')
-        # fn = os.path.join(os.path.dirname(__file__), '100.png')
-        fn = os.path.join(os.path.dirname(__file__), '../../static/img/album/default/100.png')
-        graph.put_photo(open(fn), 'Look at this cool photo!')
-    else:
-        graph.put_object('me', 'feed', link='http://www.facebook.com/nekyou.quiz', message=message)
+    try:
+        if picture:
+            app.logger.debug('Share picture, uuid: %s, message: %s, picture: %d' % (uuid, message, picture))
+            # image = urllib2.urlopen('http://crazy-quiz-dev.appspot.com/static/img/album/default/100.png')
+            # fn = os.path.join(os.path.dirname(__file__), '100.png')
+            fn = os.path.join(os.path.dirname(__file__), '../../static/img/album/default/100.png')
+            graph.put_photo(open(fn), 'Look at this cool photo!')
+        else:
+            app.logger.debug('Share message, uuid: %s, message: %s' % (uuid, message))
+            graph.put_object('me', 'feed', link='http://www.facebook.com/nekyou.quiz', message=message)
+    except Exception as e:
+        app.logger.error('Twitter share failed: %s' % str(e))
 
     return response()
 
 
 @sns_api.route('/auth/twitter/', methods=['POST'])
 def auth_twitter():
+    from main import app
+
     form = get_form(TwitterForm(request.form))
     uuid, token, token_secret, code = form.uuid.data, form.token.data, form.token_secret.data, form.code.data
     user_key = User.get(uuid).key
     twitter = Twitter.get(user_key)
 
     if not twitter:
+        app.logger.debug('Create Twitter, uuid: %s, token: %s' % (uuid, token))
         Twitter(parent=user_key, token=token, token_secret=token_secret, code=code).put()
     elif twitter.token != token:
+        app.logger.debug('Update Twitter, uuid: %s, token: %s' % (uuid, token))
         twitter.token = token
         twitter.token_secret = token_secret
         twitter.code = code
@@ -75,41 +88,28 @@ def auth_twitter():
 
 @sns_api.route('/share/twitter/', methods=['POST'])
 def share_twitter():
+    from main import app
+
     form = get_form(ShareForm(request.form))
     uuid, message, picture = form.uuid.data, form.message.data, form.picture.data
 
     user = User.get(uuid)
     twitter = Twitter.get(user.key)
 
-    # auth = tweepy.OAuthHandler('56cakvFora8FZvHdGspXB0sLA', 'ynAmVkei7IUkB2cshm4m6JyFbLWDTu6PCv4WLylFEvJfIUXXLJ')
-    # auth.set_access_token('2713692740-FVwZkAZRu4sWVf3noHHfkkOef0vhO0tHZeGfPWs', 'VHsTdpUjymIqakZ7qcHL8d2DxS1kpwgh6S1QcnK7aekU2')
-    # api = tweepy.API(auth)
-    #
-    # from main import app
-    #
-    # app.logger.info('twitter me: %s' % str(api.me()))
-    #
-    # if picture:
-    #     api.update_status('Updating using OAuth authentication via Tweepy!')
-    # else:
-    #     api.update_status('Updating using OAuth authentication via Tweepy!')
+    auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
+    auth.set_access_token(twitter.token, twitter.token_secret)
+    api = tweepy.API(auth)
 
-    return response()
-
-
-@sns_api.route('/auth/instagram/', methods=['POST'])
-def auth_instagram():
-    form = get_form(InstagramForm(request.form))
-    uuid, access_token, code = form.uuid.data, form.access_token.data, form.code.data
-    user_key = User.get(uuid).key
-    instagram = Instagram.get(user_key)
-
-    if not instagram:
-        Instagram(parent=user_key, access_token=access_token, code=code).put()
-    elif instagram.access_token != access_token:
-        instagram.access_token = access_token
-        instagram.code = code
-        instagram.put()
+    try:
+        if picture:
+            app.logger.debug('Share picture, uuid: %s, message: %s, picture: %d' % (uuid, message, picture))
+            fn = os.path.join(os.path.dirname(__file__), '../../static/img/album/default/100.png')
+            api.update_with_media(fn, '【熱狂クイズ】Look at this cool photo! %s' % str(Date.now()))
+        else:
+            app.logger.debug('Share message, uuid: %s, message: %s' % (uuid, message))
+            api.update_status('【熱狂クイズ】Updating using OAuth authentication via Tweepy! %s' % str(Date.now()))
+    except Exception as e:
+        app.logger.error('Twitter share failed: %s' % str(e))
 
     return response()
 
@@ -123,11 +123,6 @@ class FacebookForm(BaseForm):
 class TwitterForm(BaseForm):
     token = StringField('token', [validators.input_required()])
     token_secret = StringField('token_secret', [validators.input_required()])
-    code = StringField('code', [validators.input_required()])
-
-
-class InstagramForm(BaseForm):
-    access_token = StringField('access_token', [validators.input_required()])
     code = StringField('code', [validators.input_required()])
 
 

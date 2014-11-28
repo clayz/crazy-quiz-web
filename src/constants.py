@@ -5,6 +5,9 @@ DEFAULT_COIN = 100
 
 GAE_API_KEY = 'AIzaSyBYDAT-mStSoq1jJDFUxr_IFBxqy1oNu8U'
 
+TWITTER_CONSUMER_KEY = '56cakvFora8FZvHdGspXB0sLA'
+TWITTER_CONSUMER_SECRET = 'ynAmVkei7IUkB2cshm4m6JyFbLWDTu6PCv4WLylFEvJfIUXXLJ'
+
 
 class UserStatus(messages.Enum):
     ACTIVE = 1
@@ -20,7 +23,6 @@ class Gender(messages.Enum):
 class AccountType(messages.Enum):
     FACEBOOK = 1
     TWITTER = 2
-    INSTAGRAM = 3
 
 
 class Device(messages.Enum):

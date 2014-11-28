@@ -26,15 +26,3 @@ class Twitter(BaseEntity):
     def get(cls, user_key):
         data = cls.query(ancestor=user_key).fetch(1)
         return data[0] if data else None
-
-
-class Instagram(BaseEntity):
-    id = ndb.StringProperty()
-    access_token = ndb.StringProperty()
-    code = ndb.StringProperty()
-    update_date = ndb.DateTimeProperty(required=True, auto_now=True)
-
-    @classmethod
-    def get(cls, user_key):
-        data = cls.query(ancestor=user_key).fetch(1)
-        return data[0] if data else None
