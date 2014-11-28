@@ -45,3 +45,4 @@ class APIStatus(messages.Enum):
     # data related
     DATA_NOT_FOUND = 102001
     DATA_SAVE_FAILED = 102002
+    DATA_INCORRECT = 102003
