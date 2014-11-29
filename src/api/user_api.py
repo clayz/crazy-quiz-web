@@ -62,12 +62,14 @@ def daily_bonus():
         last_got_date = Date.get_date_jp(last_got_date).date()
         date_now = Date.get_date_jp().date()
 
+        print("days: " + str((date_now - last_got_date).days));
+
         if (date_now - last_got_date).days > 1:
             count = 0
         elif (date_now - last_got_date).days == 0:
             # has got bonus today
             if_got_today = True
-        else:
+        elif (date_now - last_got_date).days < 0:
             raise DataError(APIStatus.DATA_INCORRECT, 'Incorrect last got date, last_got_date: %s, now: %s' % (str(last_got_date), str(date_now)))
 
     # if last got count over 7, next time got bonus should start from 1.
@@ -106,7 +108,7 @@ def daily_bonus_save():
 
     user.put()
 
-    return response()
+    return response(saved_count = user.continue_got_count)
 
 
 @user_api.route('/notification/', methods=['POST'])
