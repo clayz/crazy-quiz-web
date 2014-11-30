@@ -3,6 +3,7 @@ from flask import Blueprint, request
 from constants import DEFAULT_GEM, DEFAULT_COIN, Device, UserStatus, APIStatus
 from utilities import response, get_form, Date
 from entities.user import User, Currency, StartupHistory
+from entities.sns import Facebook, Twitter
 from api import *
 from errors import DataError
 
@@ -28,7 +29,10 @@ def startup():
     startup_history = StartupHistory(parent=user.key, version=version, ip=request.remote_addr)
     startup_history.put()
 
-    return response()
+    facebook = Facebook.get(user.key)
+    twitter = Twitter.get(user.key)
+
+    return response(facebook=facebook is not None, twitter=twitter is not None)
 
 
 @user_api.route('/register/', methods=['GET'])
