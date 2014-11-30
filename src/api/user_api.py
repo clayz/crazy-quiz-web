@@ -35,7 +35,7 @@ def startup():
     return response(facebook=facebook is not None, twitter=twitter is not None)
 
 
-@user_api.route('/register/', methods=['GET'])
+@user_api.route('/register/', methods=['POST'])
 def register():
     from main import app
 
