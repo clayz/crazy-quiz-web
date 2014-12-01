@@ -57,7 +57,7 @@ def share_facebook():
             app.logger.debug('Share message, uuid: %s, message: %s' % (uuid, message))
             graph.put_object('me', 'feed', link='http://www.facebook.com/nekyou.quiz', message=message_template % message)
     except Exception as e:
-        app.logger.error('Twitter share failed: %s' % str(e))
+        app.logger.error('Facebook share failed: %s' % str(e))
 
     return response()
 
