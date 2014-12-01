@@ -47,15 +47,15 @@ def share_facebook():
     user = User.get(uuid)
     facebook = Facebook.get(user.key)
     graph = fb.GraphAPI(facebook.access_token)
-    message_template = '【熱狂クイズ】%s facebook.com/nekyou.quiz'
+    share_msg = u'【熱狂クイズ】%s facebook.com/nekyou.quiz' % message
 
     try:
         if album and picture:
             app.logger.debug('Share picture, uuid: %s, message: %s, picture: %d' % (uuid, message, picture))
-            graph.put_photo(open(get_picture_path(album, picture)), message_template % message)
+            graph.put_photo(open(get_picture_path(album, picture)), share_msg)
         else:
             app.logger.debug('Share message, uuid: %s, message: %s' % (uuid, message))
-            graph.put_object('me', 'feed', link='http://www.facebook.com/nekyou.quiz', message=message_template % message)
+            graph.put_object('me', 'feed', link='http://www.facebook.com/nekyou.quiz', message=message)
     except Exception as e:
         app.logger.error('Facebook share failed: %s' % str(e))
 
@@ -97,15 +97,15 @@ def share_twitter():
     auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
     auth.set_access_token(twitter.token, twitter.token_secret)
     api = tweepy.API(auth)
-    message_template = '【熱狂クイズ】%s facebook.com/nekyou.quiz'
+    share_msg = u'【熱狂クイズ】%s facebook.com/nekyou.quiz' % message
 
     try:
         if album and picture:
             app.logger.debug('Share picture, uuid: %s, message: %s, picture: %d' % (uuid, message, picture))
-            api.update_with_media(get_picture_path(album, picture), message_template % message)
+            api.update_with_media(get_picture_path(album, picture), share_msg)
         else:
             app.logger.debug('Share message, uuid: %s, message: %s' % (uuid, message))
-            api.update_status(message_template % message)
+            api.update_status(share_msg)
     except Exception as e:
         app.logger.error('Twitter share failed: %s' % str(e))
 
