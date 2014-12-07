@@ -116,7 +116,7 @@ def get_picture_path(album, picture):
     if album == 1:
         path = os.path.join(os.path.dirname(__file__), '../../static/img/album/default/%d.png' % picture)
     elif album == 2:
-        path = os.path.join(os.path.dirname(__file__), '../../static/img/album/default/%d.png' % picture)
+        path = os.path.join(os.path.dirname(__file__), '../../static/img/album/second/%d.png' % picture)
     else:
         raise DataError(APIStatus.DATA_INCORRECT, 'Unsupported album: %d' % album)
 
