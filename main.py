@@ -20,6 +20,16 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/policy')
+def policy():
+    return render_template('policy.html')
+
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+
 @app.route('/api/version/')
 def version():
     return app.config['VERSION']

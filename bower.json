@@ -1,0 +1,14 @@
+{
+  "name": "crazy-quiz-web",
+  "version": "1-2-0",
+  "directory": "static/bower_components",
+  "ignore": [
+    ".jshintrc",
+    "**/*.txt"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.1"
+  },
+  "devDependencies": {},
+  "private": true
+}
